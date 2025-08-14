@@ -7,7 +7,7 @@ import pandas as pd
 import logging
 from dateutil.relativedelta import *  # type: ignore
 import plotly.express as px
-from pages.utils.graph_utils import color_seq
+from pages.utils.graph_utils import baby_blue
 from queries.commits_query import commits_query as cmq
 from pages.utils.job_utils import nodata_graph
 import time
@@ -21,10 +21,28 @@ gc_commit_domains = dbc.Card(
     [
         dbc.CardBody(
             [
-                html.H3(
-                    "Commit Activity by Domain",
-                    className="card-title",
-                    style={"textAlign": "center"},
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            html.H3(
+                                "Commit Activity by Domain",
+                                className="card-title",
+                            ),
+                        ),
+                        dbc.Col(
+                            dbc.Button(
+                                "About Graph",
+                                id=f"popover-target-{PAGE}-{VIZ_ID}",
+                                color="outline-secondary",
+                                size="sm",
+                                className="about-graph-button",
+                            ),
+                            width="auto",
+                        ),
+                    ],
+                    align="center",
+                    justify="between",
+                    className="mb-3",
                 ),
                 dbc.Popover(
                     [
@@ -46,18 +64,30 @@ gc_commit_domains = dbc.Card(
                 ),
                 dcc.Loading(
                     dcc.Graph(id=f"{PAGE}-{VIZ_ID}"),
+                    style={"marginBottom": "1rem"},
+                ),
+                html.Hr(  # Divider between graph and controls
+                    style={
+                        "borderColor": "#909090",
+                        "margin": "1.5rem -1.5rem",
+                        "width": "calc(100% + 3rem)",
+                    }
                 ),
                 dbc.Form(
                     [
                         dbc.Row(
                             [
-                                dbc.Label(
-                                    "Contributions Required:",
-                                    html_for=f"company-contributions-required-{PAGE}-{VIZ_ID}",
-                                    width={"size": "auto"},
-                                ),
                                 dbc.Col(
                                     [
+                                        dbc.Label(
+                                            "Contributions Required:",
+                                            html_for=f"company-contributions-required-{PAGE}-{VIZ_ID}",
+                                            style={
+                                                "fontSize": "12px",
+                                                "fontWeight": "bold",
+                                                "marginBottom": "0.5rem",
+                                            },
+                                        ),
                                         dbc.Input(
                                             id=f"company-contributions-required-{PAGE}-{VIZ_ID}",
                                             type="number",
@@ -66,16 +96,12 @@ gc_commit_domains = dbc.Card(
                                             step=1,
                                             value=10,
                                             size="sm",
+                                            style={"width": "80px"},
+                                            className="dark-input",
                                         ),
                                     ],
-                                    className="me-2",
-                                    width=2,
+                                    width="auto",
                                 ),
-                            ],
-                            align="center",
-                        ),
-                        dbc.Row(
-                            [
                                 dbc.Col(
                                     dcc.DatePickerRange(
                                         id=f"date-picker-range-{PAGE}-{VIZ_ID}",
@@ -83,28 +109,22 @@ gc_commit_domains = dbc.Card(
                                         max_date_allowed=dt.date.today(),
                                         initial_visible_month=dt.date(dt.date.today().year, 1, 1),
                                         clearable=True,
+                                        className="dark-date-picker",
                                     ),
                                     width="auto",
-                                ),
-                                dbc.Col(
-                                    dbc.Button(
-                                        "About Graph",
-                                        id=f"popover-target-{PAGE}-{VIZ_ID}",
-                                        color="secondary",
-                                        size="sm",
-                                    ),
-                                    width="auto",
-                                    style={"paddingTop": ".5em"},
+                                    style={"marginTop": "1.7rem"},
                                 ),
                             ],
                             align="center",
-                            justify="between",
+                            justify="start",
                         ),
                     ]
                 ),
-            ]
-        )
+            ],
+            style={"padding": "1.5rem"},
+        ),
     ],
+    className="dark-card",
 )
 
 
@@ -206,11 +226,18 @@ def process_data(df: pd.DataFrame, num, start_date, end_date):
 
 def create_figure(df: pd.DataFrame):
     # graph generation
-    fig = px.pie(df, names="domains", values="occurrences", color_discrete_sequence=color_seq)
+    fig = px.pie(df, names="domains", values="occurrences", color_discrete_sequence=baby_blue)
     fig.update_traces(
         textposition="inside",
         textinfo="percent+label",
         hovertemplate="%{label} <br>Commits: %{value}<br><extra></extra>",
+    )
+
+    fig.update_layout(
+        paper_bgcolor="#292929",
+        plot_bgcolor="#292929",
+        font=dict(color="white"),
+        legend=dict(font=dict(color="white")),
     )
 
     return fig
